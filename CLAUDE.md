@@ -1,6 +1,6 @@
 # Benih Delima — Project Context
 
-> Working name: **Benih Delima** (matches this repo's name). Per the original spec, the app name is **not finalized** — other candidates under consideration: Denyut Delima, Delima Bertumbuh, Akar Delima, Ranting Delima. ("Delima Muda" was considered and dropped.) Decide before/during the naming settles for real; don't treat "Benih Delima" as locked in.
+> App name: **Benih Delima** — finalized. (Other candidates considered and dropped: Denyut Delima, Delima Bertumbuh, Akar Delima, Ranting Delima, and "Delima Muda".)
 
 A separate app for the **Program Pemeliharaan Umat, Komisi Pemuda GKI Delima**. Core focus: geofence-based attendance (presensi) + member data maintenance, as the foundation for future follow-up/pastoral-care reporting (LKKJ).
 
@@ -9,7 +9,7 @@ This repo is **pre-implementation** — no code exists yet. This file is the ref
 ## Roles & Auth
 
 - **PIC/Pengurus** — manage member data, record follow-ups (LKKJ — schema not yet designed), view & approve attendance overrides, view recap across all members.
-- **Anggota Pemuda** (youth member) — lightweight login (magic link/OTP — method not yet decided), self-check-in for attendance, view own profile.
+- **Anggota Pemuda** (youth member) — logs in via **magic link (email) through Supabase Auth**, self-check-in for attendance, view own profile.
 
 ## Tech Stack (assumed, carried over from prior GKI Delima projects — not yet set up in this repo)
 
@@ -52,7 +52,7 @@ Activity status is **not a stored column** — it's computed (view/derived) from
 | tanggal | |
 | waktu_mulai | |
 | lokasi_nama | free text — also used for the host church name on `ibadah_raya_klasis` |
-| lat, lng, radius_meter | for geofence validation |
+| lat, lng, radius_meter | for geofence validation — Phase 1 default: **100m for all event_types** |
 | is_auto_generated | boolean |
 | created_by | FK → pic_id |
 | created_at | |
@@ -76,14 +76,16 @@ Activity status is **not a stored column** — it's computed (view/derived) from
 
 ### Check-in flow
 
-1. Member taps "Hadir" → app validates location against the event's `lat/lng/radius_meter`.
+1. Member taps "Hadir" → app validates location against the event's `lat/lng/radius_meter` (Phase 1 default radius: 100m).
 2. Within radius → recorded immediately as `hadir`, method `self_geofence`.
 3. Outside radius → status "pending", queued for PIC approval.
 4. PIC manually approves with a short reason → recorded as `hadir`, method `self_override_by_pic`, with `override_by` + `override_reason` filled in.
 
+Phase 1 ships a **minimal** version of step 4 (a plain pending-list PIC can approve/reject from) so the flow is complete end-to-end — the full approval **queue UI + notifications** is Phase 2.
+
 ### Auto-generating `ibadah_minggu_pemuda`
 
-- Generated automatically every week (cron/job mechanism — technical details not yet decided).
+- Generated automatically every week. Proposed default mechanism: **Supabase `pg_cron`** triggering a Postgres/Edge function — not yet confirmed with the user, treat as a starting assumption rather than a locked decision.
 - Weeks 1–4 of the month → `event_type: ibadah_minggu_pemuda`, default youth venue.
 - **Week 5** (if it exists) → still generated, but as `event_type: ibadah_minggu_gabung` — **same venue** as the regular youth service (one building, just a combined session with the general congregation service).
 - All auto-generated events are flagged `is_auto_generated: true` so PIC can edit/cancel manually (e.g. Christmas/New Year breaks).
@@ -104,12 +106,17 @@ Activity status is **not a stored column** — it's computed (view/derived) from
 2. **Fase 2** — PIC dashboard: override approval queue, automatic notifications triggered for consecutive absences. **Desktop-screen-optimized** — PIC/pengurus workflows assume a larger screen.
 3. **Fase 3** — `followups` (LKKJ): PIC's follow-up records with members, periodic reports to commission/majelis (schema not yet discussed). **Both mobile and desktop** — follow-up recording needs to work for PIC in the field (mobile) and during reporting sessions (desktop).
 
+## Decided (Phase 1 blockers, confirmed 2026-07-11)
+
+- **App name**: Benih Delima — final.
+- **Auth method**: Magic link (email) via Supabase Auth.
+- **Geofence radius**: 100m default, same for all event_types in Phase 1.
+- **Override handling in Phase 1**: included (minimal PIC approve/reject on a pending-list), not deferred to Phase 2.
+
 ## Open Items / Not Yet Decided
 
-- Final app name
-- Auth method (magic link vs. WA OTP vs. Google)
-- Technical mechanism for weekly event auto-generation (cron job, scheduled function, etc.)
-- Default geofence radius per event_type
-- `followups`/LKKJ table schema — structure & fields not discussed at all yet
+- Technical mechanism for weekly event auto-generation — a default (`pg_cron` + Postgres/Edge function) is proposed above but not confirmed with the user.
+- Whether `izin` (excused absence) can be self-reported by the member, or is PIC-only — no decision yet; treat as PIC-only until confirmed.
+- `followups`/LKKJ table schema — structure & fields not discussed at all yet (Phase 3).
 
 Treat everything in this section as **undecided** — don't assume an implementation for these without checking with the user first.

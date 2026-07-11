@@ -4,7 +4,7 @@ Scope: `members` + `events` + `attendance` — self check-in with geofence + ove
 
 ## Epic: Auth & Access
 
-1. As an anggota pemuda, I want to log in with a lightweight method (magic link/OTP), so that I can check in without managing a password.
+1. As an anggota pemuda, I want to log in via a magic link sent to my email (Supabase Auth), so that I can check in without managing a password.
 2. As a PIC, I want to log in and be recognized with elevated permissions, so that I can manage member data and events.
 
 ## Epic: Member Data (`members`)
@@ -24,7 +24,7 @@ Scope: `members` + `events` + `attendance` — self check-in with geofence + ove
 
 ## Epic: Self Check-in & Geofence (`attendance`)
 
-12. As an anggota pemuda, I want to tap "Hadir" and have my location checked against the event's geofence, so that my attendance is verified without manual entry.
+12. As an anggota pemuda, I want to tap "Hadir" and have my location checked against the event's geofence (100m default radius), so that my attendance is verified without manual entry.
 13. As an anggota pemuda, I want to be marked `hadir` immediately (method `self_geofence`) when I'm inside the radius, so that check-in is fast and frictionless.
 14. As an anggota pemuda, I want my check-in to go into a "pending" state when I'm outside the radius, so that I still have a path to be counted present.
 15. As an anggota pemuda, I want to see the status of my pending check-in (pending/approved), so that I know whether I still need to follow up.
@@ -35,7 +35,12 @@ Scope: `members` + `events` + `attendance` — self check-in with geofence + ove
 17. As a PIC, I want to approve a pending check-in with a short reason, so that it's recorded as `hadir` with method `self_override_by_pic`, `override_by`, and `override_reason` filled in.
 18. As a PIC, I want to reject a pending check-in, so that it's recorded as `absen` or `izin` instead of left unresolved.
 
+## Decisions (confirmed 2026-07-11)
+
+- Auth: magic link (email) via Supabase Auth.
+- Geofence radius: 100m default, same for all event_types.
+- Override handling: stories 16–18 (minimal approve/reject) are confirmed **in scope for Phase 1** — the full approval queue UI + notifications remain Phase 2.
+
 ## Open Questions
 
-- Stories 16–18 give PIC just enough override handling to make the Phase 1 flow end-to-end. The full approval **queue UI + notifications** is explicitly Phase 2 per the spec — confirm whether Phase 1 should instead leave overrides stuck as "pending" with no PIC resolution path at all.
-- No `izin` (excused absence) self-report story is included, since the spec doesn't describe how `izin` gets set — decide if that's member-initiated or PIC-only.
+- No `izin` (excused absence) self-report story is included, since the spec doesn't describe how `izin` gets set. Default assumption per `CLAUDE.md`: **PIC-only** (member cannot self-report `izin` in Phase 1) — confirm before building.
