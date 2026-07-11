@@ -4,7 +4,7 @@
 
 A separate app for the **Program Pemeliharaan Umat, Komisi Pemuda GKI Delima**. Core focus: geofence-based attendance (presensi) + member data maintenance, as the foundation for future follow-up/pastoral-care reporting (LKKJ).
 
-This repo is **pre-implementation** — no code exists yet. This file is the reference doc for the domain, data model, and business rules so a session can start building without the spec being re-pasted.
+This repo is **pre-implementation** on the app side — no frontend code exists yet. The Phase 1 database schema is implemented as Supabase migrations in `supabase/migrations/` (see "Database Schema" below). This file is the reference doc for the domain, data model, and business rules so a session can start building without the spec being re-pasted.
 
 ## Roles & Auth
 
@@ -71,6 +71,16 @@ Activity status is **not a stored column** — it's computed (view/derived) from
 | override_by | FK → pic_id, nullable |
 | override_reason | text, nullable |
 | created_at | |
+
+## Database Schema
+
+Implemented in `supabase/migrations/` (applied in filename order) and verified against a scratch Postgres instance. Beyond the conceptual data model above, the migrations make these implementation decisions — not previously in the spec, so flag if they should change:
+
+- **`members.email` / `pics.email`** — new columns, distinct from `kontak`. Magic-link auth needs a real email to key off; a Postgres trigger on `auth.users` (`20260711000003_auth_linking.sql`) links a newly-authenticated Supabase user back to their pre-provisioned `members`/`pics` row by matching email, filling in `auth_user_id`.
+- **`attendance.status` is nullable** — the spec's check-in flow describes a "pending" state for out-of-geofence self check-ins, but `attendance_status` only enumerates the three final outcomes (`hadir`/`izin`/`absen`). `NULL` represents "pending, awaiting PIC review."
+- **All `attendance` writes go through two `SECURITY DEFINER` functions**, not direct table INSERT/UPDATE: `submit_check_in(event_id, lat, lng)` computes the geofence distance server-side (so a client can't forge `geofence_passed`), and `resolve_override(attendance_id, status, reason)` lets a PIC approve/reject a pending row. RLS on `attendance` only grants SELECT — there are no write policies, by design.
+- **`member_followup_status` view** — only `ibadah_minggu_pemuda`/`ibadah_minggu_gabung` (the weekly cadence) count toward the "needs follow-up" streak; ad hoc events (`ktb`, `ibadah_raya_klasis`, `acara_khusus`) don't. A member needs follow-up if they weren't `hadir` at any of their 3 most recent weekly events. This 3-event window is an assumption (spec says "3–4 weeks") — adjust if a different threshold is wanted.
+- **RLS summary**: PIC (row exists in `pics` linked to the caller) gets full CRUD on `members`/`events` and SELECT on `attendance`/`pics`. A member gets SELECT on their own `members` row, SELECT on all `events`, and SELECT on their own `attendance` rows only.
 
 ## Business Logic
 
