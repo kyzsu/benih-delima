@@ -85,7 +85,7 @@ Phase 1 ships a **minimal** version of step 4 (a plain pending-list PIC can appr
 
 ### Auto-generating `ibadah_minggu_pemuda`
 
-- Generated automatically every week. Proposed default mechanism: **Supabase `pg_cron`** triggering a Postgres/Edge function — not yet confirmed with the user, treat as a starting assumption rather than a locked decision.
+- Generated automatically every week via **Supabase `pg_cron`** triggering a Postgres/Edge function.
 - Weeks 1–4 of the month → `event_type: ibadah_minggu_pemuda`, default youth venue.
 - **Week 5** (if it exists) → still generated, but as `event_type: ibadah_minggu_gabung` — **same venue** as the regular youth service (one building, just a combined session with the general congregation service).
 - All auto-generated events are flagged `is_auto_generated: true` so PIC can edit/cancel manually (e.g. Christmas/New Year breaks).
@@ -112,11 +112,11 @@ Phase 1 ships a **minimal** version of step 4 (a plain pending-list PIC can appr
 - **Auth method**: Magic link (email) via Supabase Auth.
 - **Geofence radius**: 100m default, same for all event_types in Phase 1.
 - **Override handling in Phase 1**: included (minimal PIC approve/reject on a pending-list), not deferred to Phase 2.
+- **Weekly event auto-generation mechanism**: Supabase `pg_cron` triggering a Postgres/Edge function.
+- **`izin` (excused absence) reporting**: PIC-only in Phase 1 — members cannot self-report `izin`.
 
 ## Open Items / Not Yet Decided
 
-- Technical mechanism for weekly event auto-generation — a default (`pg_cron` + Postgres/Edge function) is proposed above but not confirmed with the user.
-- Whether `izin` (excused absence) can be self-reported by the member, or is PIC-only — no decision yet; treat as PIC-only until confirmed.
 - `followups`/LKKJ table schema — structure & fields not discussed at all yet (Phase 3).
 
 Treat everything in this section as **undecided** — don't assume an implementation for these without checking with the user first.

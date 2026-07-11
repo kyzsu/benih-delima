@@ -40,7 +40,7 @@ Scope: `members` + `events` + `attendance` — self check-in with geofence + ove
 - Auth: magic link (email) via Supabase Auth.
 - Geofence radius: 100m default, same for all event_types.
 - Override handling: stories 16–18 (minimal approve/reject) are confirmed **in scope for Phase 1** — the full approval queue UI + notifications remain Phase 2.
+- Weekly event auto-generation: Supabase `pg_cron` triggering a Postgres/Edge function.
+- `izin` (excused absence) is **PIC-only** in Phase 1 — no member self-report story is needed.
 
-## Open Questions
-
-- No `izin` (excused absence) self-report story is included, since the spec doesn't describe how `izin` gets set. Default assumption per `CLAUDE.md`: **PIC-only** (member cannot self-report `izin` in Phase 1) — confirm before building.
+All Phase 1 blockers are resolved. Remaining open items in `CLAUDE.md` (the `followups`/LKKJ schema) belong to Phase 3.
