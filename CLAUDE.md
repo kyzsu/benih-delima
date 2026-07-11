@@ -4,18 +4,22 @@
 
 A separate app for the **Program Pemeliharaan Umat, Komisi Pemuda GKI Delima**. Core focus: geofence-based attendance (presensi) + member data maintenance, as the foundation for future follow-up/pastoral-care reporting (LKKJ).
 
-This repo is **pre-implementation** on the app side — no frontend code exists yet. The Phase 1 database schema is implemented as Supabase migrations in `supabase/migrations/` (see "Database Schema" below). This file is the reference doc for the domain, data model, and business rules so a session can start building without the spec being re-pasted.
+The frontend is scaffolded: Vite + React 19 + TypeScript at the repo root, with Tailwind v4. The Phase 1 database schema is implemented as Supabase migrations in `supabase/migrations/` (see "Database Schema" below). This file is the reference doc for the domain, data model, and business rules so a session can start building without the spec being re-pasted.
 
 ## Roles & Auth
 
 - **PIC/Pengurus** — manage member data, record follow-ups (LKKJ — schema not yet designed), view & approve attendance overrides, view recap across all members.
 - **Anggota Pemuda** (youth member) — logs in via **magic link (email) through Supabase Auth**, self-check-in for attendance, view own profile.
 
-## Tech Stack (assumed, carried over from prior GKI Delima projects — not yet set up in this repo)
+## Tech Stack
 
-- React 19 + Vite + TypeScript
-- Tailwind CSS
-- Supabase (Postgres + Auth + Realtime)
+- React 19 + Vite + TypeScript — scaffolded at repo root.
+- Tailwind CSS v4, wired in manually via `@tailwindcss/vite` (see note below).
+- Supabase (Postgres + Auth + Realtime) — schema in `supabase/migrations/`, client wiring not yet built.
+
+### shadcn/ui: CLI is blocked in this sandbox, components are hand-rolled stand-ins
+
+The shadcn skill is installed (`.claude/skills/shadcn`), but `ui.shadcn.com` gets a `403` from this environment's egress policy, so `shadcn init`/`add` can't run here. Rather than block on it, `src/index.css` and `src/components/ui/{button,input,field}.tsx` were hand-written to match shadcn's real conventions as closely as possible (same semantic CSS tokens, same `cn()` utility, same rough component API) specifically so they're a **drop-in replacement** once a session with network access can run the real CLI. When that's possible: run `npx shadcn@latest init` for real, then re-add `button`/`input`/`field` (and anything else needed) via `npx shadcn@latest add`, diffing against these stand-ins before overwriting.
 
 ## Data Model
 
